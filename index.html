@@ -91,8 +91,8 @@
 
 <!-- 自動同期ステータス表示バー -->
 <div class="sync-status-bar">
-  <span id="syncStatus">🔄 クラウドデータを読み込み中...</span>
-  <button class="btn-sub-add" style="padding: 2px 8px; font-size: 0.7rem;" onclick="fetchFromGithub()">再読み込み</button>
+  <span id="syncStatus">🔄 GitHubからデータ取得中...</span>
+  <button class="btn-sub-add" style="padding: 2px 8px; font-size: 0.7rem;" onclick="fetchFromGithub()">更新</button>
 </div>
 
 <!-- 科目管理 -->
@@ -176,8 +176,8 @@
 <script>
   // ★★★ ここにご自身の GitHub 情報を設定してください ★★★
   const GH_USER = 'bca139784'; // 例: 'fujita'
-  const GH_REPO = 'study-tracker';       // 例: 'study-tracker'
-  const GH_TOKEN = 'ghp_4x7xzylvnopnozc5nnlqdkabbhrpga3d1knl';   // 発行した Personal Access Token (PAT)
+  const GH_REPO = 'study-tracker';       // リポジトリ名
+  const GH_TOKEN = 'ghp_4x7xzylvnopnozc5nnlqdkabbhrpga3d1knl';   // トークン (PAT)
 
   let subjects = JSON.parse(localStorage.getItem('custom_subjects')) || ['英語', '数学', '国語', '理科', '社会'];
   let books = JSON.parse(localStorage.getItem('route_books_data')) || [];
@@ -194,44 +194,72 @@
     return fallbackPalette[Math.abs(hash) % fallbackPalette.length];
   }
 
+  // 日本語（UTF-8）の文字列をBase64デコードする関数
+  function b64DecodeUnicode(str) {
+    return decodeURIComponent(Array.prototype.map.call(atob(str), function(c) {
+      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+  }
+
+  // 日本語（UTF-8）の文字列をBase64エンコードする関数
+  function b64EncodeUnicode(str) {
+    return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, function(match, p1) {
+      return String.fromCharCode('0x' + p1);
+    }));
+  }
+
   // 初期化
   document.getElementById('inStart').value = new Date().toISOString().split('T')[0];
   document.getElementById('inEnd').value = new Date(2027, 11, 31).toISOString().split('T')[0];
 
-  // 起動時に自動で取得開始
+  // 起動時に自動取得
   fetchFromGithub();
 
   // GitHubからdata.jsonを取得
   async function fetchFromGithub() {
+    const statusEl = document.getElementById('syncStatus');
+
     if (!GH_USER || !GH_REPO || !GH_TOKEN || GH_USER === 'YOUR_GITHUB_USERNAME') {
-      document.getElementById('syncStatus').textContent = '⚠️ コード内のGitHub設定を書き換えてください';
+      statusEl.textContent = '⚠️ コード内のGitHub設定を入力してください';
+      renderLocalOnly();
       return;
     }
 
-    document.getElementById('syncStatus').textContent = '🔄 クラウドから最新データを読み込み中...';
+    statusEl.textContent = '🔄 クラウドから最新データを読み込み中...';
 
     try {
       const res = await fetch(`https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/data.json`, {
-        headers: { 'Authorization': `token ${GH_TOKEN}` }
+        headers: {
+          'Authorization': `Bearer ${GH_TOKEN}`,
+          'Accept': 'application/vnd.github.v3+json'
+        }
       });
 
       if (res.ok) {
         const data = await res.json();
         fileSha = data.sha;
-        const content = JSON.parse(decodeURIComponent(escape(atob(data.content))));
         
-        subjects = content.subjects || subjects;
-        books = content.books || books;
+        // Base64デコード（改行を除去）
+        const cleanContent = data.content.replace(/\n/g, '');
+        const jsonText = b64DecodeUnicode(cleanContent);
+        const parsed = JSON.parse(jsonText);
 
-        document.getElementById('syncStatus').textContent = '✅ クラウド同期完了（最新）';
+        subjects = parsed.subjects || subjects;
+        books = parsed.books || books;
+
+        statusEl.textContent = '✅ クラウド同期完了（最新）';
         renderLocalOnly();
       } else if (res.status === 404) {
-        // data.jsonがない場合は初回作成
+        statusEl.textContent = '📄 data.json が無いため初期データを送信します';
         await syncToGithub();
-        document.getElementById('syncStatus').textContent = '✅ 初回クラウドデータを生成しました';
+      } else {
+        const errJson = await res.json().catch(() => ({}));
+        statusEl.textContent = `❌ APIエラー (${res.status}): ${errJson.message || '認証失敗'}`;
+        renderLocalOnly();
       }
     } catch (e) {
-      document.getElementById('syncStatus').textContent = '❌ 同期エラーが発生しました';
+      statusEl.textContent = '❌ 通信エラーが発生しました';
+      renderLocalOnly();
     }
   }
 
@@ -240,9 +268,10 @@
     localStorage.setItem('custom_subjects', JSON.stringify(subjects));
     localStorage.setItem('route_books_data', JSON.stringify(books));
 
+    const statusEl = document.getElementById('syncStatus');
     if (!GH_USER || !GH_REPO || !GH_TOKEN || GH_USER === 'YOUR_GITHUB_USERNAME') return;
 
-    document.getElementById('syncStatus').textContent = '☁️ クラウドへ自動保存中...';
+    statusEl.textContent = '☁️ クラウドへ自動保存中...';
 
     const payloadData = {
       subjects: subjects,
@@ -250,7 +279,7 @@
       updatedAt: new Date().toISOString()
     };
 
-    const contentEncoded = btoa(unescape(encodeURIComponent(JSON.stringify(payloadData, null, 2))));
+    const contentEncoded = b64EncodeUnicode(JSON.stringify(payloadData, null, 2));
 
     const body = {
       message: 'Update study data via Dashboard',
@@ -262,7 +291,8 @@
       const res = await fetch(`https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/data.json`, {
         method: 'PUT',
         headers: {
-          'Authorization': `token ${GH_TOKEN}`,
+          'Authorization': `Bearer ${GH_TOKEN}`,
+          'Accept': 'application/vnd.github.v3+json',
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(body)
@@ -271,10 +301,12 @@
       if (res.ok) {
         const resData = await res.json();
         fileSha = resData.content.sha;
-        document.getElementById('syncStatus').textContent = '✅ クラウドへ保存されました';
+        statusEl.textContent = '✅ クラウドへ保存されました';
+      } else {
+        statusEl.textContent = '❌ クラウド書き込み失敗';
       }
     } catch (e) {
-      document.getElementById('syncStatus').textContent = '❌ クラウド保存エラー';
+      statusEl.textContent = '❌ 保存中に通信エラーが発生';
     }
   }
 
