@@ -131,7 +131,7 @@
 
 <!-- タイムライン -->
 <div class="section">
-  <h2>参考書ルート（2026年〜2027年12月）</h2>
+  <h2>予定</h2>
   <div class="timeline-wrapper">
     <div class="timeline-inner" id="timelineInner">
       <div class="year-header">
@@ -155,7 +155,7 @@
 
 <!-- 参考書登録 -->
 <div class="section">
-  <h2>参考書・ルートの追加</h2>
+  <h2>参考書の追加</h2>
   <div class="form-grid full">
     <div>
       <label>参考書名</label>
@@ -182,12 +182,12 @@
       <input type="date" id="inEnd">
     </div>
   </div>
-  <button class="btn-add" onclick="addBook()">ルート・参考書を登録</button>
+  <button class="btn-add" onclick="addBook()">参考書を登録</button>
 </div>
 
 <!-- タスクまとめ -->
 <div class="section">
-  <h2>今週のタスク一覧（自動算出）</h2>
+  <h2>今週のタスク一覧</h2>
   <div class="task-summary-list" id="taskSummary"></div>
 </div>
 
@@ -198,8 +198,8 @@
 </div>
 
 <script>
-  const GH_USER = 'bca139784'; // 例: 'fujita'
-  const GH_REPO = 'study-tracker';       // リポジトリ名
+  const GH_USER = 'bca139784'; 
+  const GH_REPO = 'study-tracker';      
 
   let GH_TOKEN = localStorage.getItem('gh_sync_token') || '';
   let subjects = JSON.parse(localStorage.getItem('custom_subjects')) || ['英語', '数学', '国語', '理科', '社会'];
@@ -254,7 +254,7 @@
     const statusEl = document.getElementById('syncStatus');
 
     if (!GH_TOKEN) {
-      statusEl.textContent = '🔑 トークン（ghp_...）を入力してください';
+      statusEl.textContent = 'トークン（ghp_...）を入力';
       document.getElementById('tokenBox').style.display = 'flex';
       renderLocalOnly();
       return;
@@ -281,7 +281,7 @@
         subjects = parsed.subjects || subjects;
         books = parsed.books || books;
 
-        statusEl.textContent = '✅ クラウド同期完了（全端末共通データ）';
+        statusEl.textContent = '✅ クラウド同期完了';
         renderLocalOnly();
       } else if (res.status === 404) {
         statusEl.textContent = '📄 data.json が無いため初期データを送信します';
@@ -334,7 +334,7 @@
       if (res.ok) {
         const resData = await res.json();
         fileSha = resData.content.sha;
-        statusEl.textContent = '✅ クラウドへ保存されました（全端末に即時反映）';
+        statusEl.textContent = '✅ クラウドへ保存されました';
       } else {
         statusEl.textContent = '❌ クラウド書き込み失敗';
       }
