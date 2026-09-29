@@ -1,0 +1,492 @@
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+    background-color: #f7f7f8;
+    color: #111111;
+    padding: 16px;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  h1 { font-size: 1.2rem; font-weight: 700; margin-bottom: 16px; }
+  h2 { font-size: 1rem; font-weight: 600; margin-bottom: 12px; color: #333; }
+
+  .section {
+    background: #ffffff;
+    border: 1px solid #e5e5ea;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 20px;
+  }
+
+  /* GitHub同期設定エリア */
+  .gh-config-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .gh-config-grid.full { grid-template-columns: 1fr; }
+  .sync-status {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #007aff;
+    margin-top: 6px;
+  }
+
+  /* 科目管理エリア */
+  .subject-manage-row { display: flex; gap: 8px; margin-bottom: 12px; }
+  .subject-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .subject-tag {
+    font-size: 0.75rem; padding: 4px 8px; border-radius: 6px;
+    display: flex; align-items: center; gap: 6px; color: #ffffff; font-weight: 600;
+  }
+  .subject-tag button { background: none; border: none; color: #ffffff; font-size: 0.85rem; cursor: pointer; opacity: 0.8; }
+
+  /* タイムライン */
+  .timeline-wrapper { overflow-x: auto; border: 1px solid #e5e5ea; border-radius: 8px; background: #ffffff; padding: 12px; }
+  .timeline-inner { min-width: 1800px; position: relative; }
+  .year-header { display: flex; margin-left: 80px; border-bottom: 2px solid #333; font-weight: bold; font-size: 0.85rem; color: #111; }
+  .year-cell { flex: 1; text-align: center; padding: 4px 0; background: #fafafa; }
+  .year-cell:first-child { border-right: 2px solid #e5e5ea; }
+  .month-header { display: flex; margin-left: 80px; border-bottom: 1px solid #d1d1d6; padding-bottom: 4px; margin-bottom: 8px; background: #ffffff; }
+  .month-cell { flex: 1; text-align: center; font-size: 0.75rem; font-weight: 600; color: #555; border-left: 1px solid #e5e5ea; padding: 2px 0; }
+  .month-cell:first-child { border-left: none; }
+  .subject-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .subject-name { width: 68px; font-size: 0.85rem; font-weight: 700; color: #333; flex-shrink: 0; text-align: right; }
+  .timeline-track { flex: 1; height: 32px; background: #f7f7f8; border-radius: 6px; position: relative; border: 1px solid #e5e5ea; background-image: linear-gradient(to right, #e5e5ea 1px, transparent 1px); background-size: calc(100% / 24) 100%; }
+  .timeline-bar { position: absolute; top: 4px; height: 22px; color: #ffffff; font-size: 0.75rem; font-weight: 600; line-height: 22px; padding: 0 10px; border-radius: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-shadow: 0 1px 3px rgba(0,0,0,0.15); z-index: 1; }
+  .today-marker { position: absolute; top: 28px; bottom: 0; width: 2px; background-color: #ff3b30; z-index: 5; pointer-events: none; }
+  .today-label { position: absolute; top: 2px; transform: translateX(-50%); background-color: #ff3b30; color: #ffffff; font-size: 0.65rem; font-weight: bold; padding: 2px 6px; border-radius: 10px; white-space: nowrap; z-index: 6; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+
+  /* フォーム・カード */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+  .form-grid.full { grid-template-columns: 1fr; }
+  label { font-size: 0.7rem; color: #666; display: block; margin-bottom: 2px; }
+  input, select { width: 100%; font-size: 0.85rem; border: 1px solid #e5e5ea; border-radius: 6px; padding: 6px 8px; outline: none; background: #fafafa; }
+  .btn-add { width: 100%; background: #111111; color: #ffffff; border: none; border-radius: 6px; padding: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; margin-top: 4px; }
+  .btn-sub-add { background: #333; color: #fff; border: none; border-radius: 6px; padding: 6px 12px; font-size: 0.8rem; cursor: pointer; white-space: nowrap; }
+  .task-summary-list { display: flex; flex-direction: column; gap: 8px; }
+  .task-summary-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: #fafafa; border-radius: 8px; font-size: 0.85rem; }
+  .task-badge { font-size: 0.7rem; padding: 2px 8px; border-radius: 4px; margin-right: 6px; color: #ffffff; font-weight: 600; }
+  .card { background: #ffffff; border: 1px solid #e5e5ea; border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+  .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+  .book-title { font-size: 0.95rem; font-weight: 700; }
+  .book-info { font-size: 0.75rem; color: #666; margin-top: 2px; }
+  .btn-del { background: none; border: none; color: #999; font-size: 0.75rem; cursor: pointer; }
+  .norma-box { display: flex; justify-content: space-between; align-items: baseline; background: #f7f7f8; padding: 8px 12px; border-radius: 8px; margin: 10px 0; }
+  .norma-title { font-size: 0.75rem; color: #555; }
+  .norma-val { font-size: 1rem; font-weight: 700; }
+  .progress-bar { height: 6px; background: #e5e5ea; border-radius: 3px; overflow: hidden; margin-bottom: 12px; }
+  .progress-fill { height: 100%; background: #111111; transition: width 0.3s; }
+  .days-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; padding-top: 8px; border-top: 1px solid #f0f0f2; }
+  .day-col { display: flex; flex-direction: column; align-items: center; }
+  .day-col-header { font-size: 0.65rem; color: #666; margin-bottom: 4px; text-align: center; line-height: 1.2; }
+  .day-col-header.is-today { color: #ff3b30; font-weight: bold; }
+  .today-tag { background: #ff3b30; color: #fff; font-size: 0.55rem; padding: 1px 3px; border-radius: 3px; display: block; margin-top: 1px; }
+  .day-col input { text-align: center; padding: 4px 0; font-size: 0.8rem; }
+  .day-col input.today-input { border: 1.5px solid #ff3b30; background-color: #fff5f5; }
+</style>
+
+<h1>学習ルート・進捗ダッシュボード</h1>
+
+<!-- GitHub端末同期設定 -->
+<div class="section">
+  <h2>複数端末のGitHub同期設定</h2>
+  <div class="gh-config-grid">
+    <div>
+      <label>GitHub ユーザー名</label>
+      <input type="text" id="ghUser" placeholder="例: username">
+    </div>
+    <div>
+      <label>リポジトリ名</label>
+      <input type="text" id="ghRepo" placeholder="例: study-tracker">
+    </div>
+  </div>
+  <div class="gh-config-grid full">
+    <div>
+      <label>GitHub Personal Access Token (PAT)</label>
+      <input type="password" id="ghToken" placeholder="ghp_xxxxxxxxxxxx">
+    </div>
+  </div>
+  <button class="btn-add" onclick="saveGithubSettings()">同期設定を保存して接続</button>
+  <div class="sync-status" id="syncStatus">未接続（設定を入力すると複数端末で完全同期されます）</div>
+</div>
+
+<!-- 科目管理 -->
+<div class="section">
+  <h2>科目の設定</h2>
+  <div class="subject-manage-row">
+    <input type="text" id="newSubjectName" placeholder="新しい科目名（例: 英語、物理、世界史）">
+    <button class="btn-sub-add" onclick="addSubject()">科目追加</button>
+  </div>
+  <div class="subject-tags" id="subjectTagList"></div>
+</div>
+
+<!-- タイムライン -->
+<div class="section">
+  <h2>参考書ルート（2026年〜2027年12月）</h2>
+  <div class="timeline-wrapper">
+    <div class="timeline-inner" id="timelineInner">
+      <div class="year-header">
+        <div class="year-cell">2026年</div>
+        <div class="year-cell">2027年</div>
+      </div>
+      <div class="month-header">
+        <div class="month-cell">1月</div><div class="month-cell">2月</div><div class="month-cell">3月</div>
+        <div class="month-cell">4月</div><div class="month-cell">5月</div><div class="month-cell">6月</div>
+        <div class="month-cell">7月</div><div class="month-cell">8月</div><div class="month-cell">9月</div>
+        <div class="month-cell">10月</div><div class="month-cell">11月</div><div class="month-cell">12月</div>
+        <div class="month-cell">1月</div><div class="month-cell">2月</div><div class="month-cell">3月</div>
+        <div class="month-cell">4月</div><div class="month-cell">5月</div><div class="month-cell">6月</div>
+        <div class="month-cell">7月</div><div class="month-cell">8月</div><div class="month-cell">9月</div>
+        <div class="month-cell">10月</div><div class="month-cell">11月</div><div class="month-cell">12月</div>
+      </div>
+      <div id="timelineList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 参考書登録 -->
+<div class="section">
+  <h2>参考書・ルートの追加</h2>
+  <div class="form-grid full">
+    <div>
+      <label>参考書名</label>
+      <input type="text" id="inTitle" placeholder="例: システム英単語">
+    </div>
+  </div>
+  <div class="form-grid">
+    <div>
+      <label>科目</label>
+      <select id="inSubject"></select>
+    </div>
+    <div>
+      <label>総問題数</label>
+      <input type="number" id="inTotal" placeholder="1900">
+    </div>
+  </div>
+  <div class="form-grid">
+    <div>
+      <label>開始日</label>
+      <input type="date" id="inStart">
+    </div>
+    <div>
+      <label>終了目標日</label>
+      <input type="date" id="inEnd">
+    </div>
+  </div>
+  <button class="btn-add" onclick="addBook()">ルート・参考書を登録</button>
+</div>
+
+<!-- タスクまとめ -->
+<div class="section">
+  <h2>今週のタスク一覧（自動算出）</h2>
+  <div class="task-summary-list" id="taskSummary"></div>
+</div>
+
+<!-- 実績入力 -->
+<div class="section">
+  <h2>参考書ごとの進捗・問題数入力</h2>
+  <div id="bookList"></div>
+</div>
+
+<script>
+  let subjects = JSON.parse(localStorage.getItem('custom_subjects')) || ['英語', '数学', '国語', '理科', '社会'];
+  let books = JSON.parse(localStorage.getItem('route_books_data')) || [];
+  let fileSha = ''; // GitHub API用
+  const dayNames = ['月', '火', '水', '木', '金', '土', '日'];
+
+  const defaultColors = { '英語': '#2b5c8f', '数学': '#d9383a', '国語': '#d97724', '理科': '#2a8251', '社会': '#6b4c9a' };
+  const fallbackPalette = ['#38761d', '#990000', '#1c4587', '#783f04', '#4c1130', '#0b5394', '#351c75'];
+
+  function getSubjectColor(subject) {
+    if (defaultColors[subject]) return defaultColors[subject];
+    let hash = 0;
+    for (let i = 0; i < subject.length; i++) hash = subject.charCodeAt(i) + ((hash << 5) - hash);
+    return fallbackPalette[Math.abs(hash) % fallbackPalette.length];
+  }
+
+  // 初期化設定読み込み
+  document.getElementById('inStart').value = new Date().toISOString().split('T')[0];
+  document.getElementById('inEnd').value = new Date(2027, 11, 31).toISOString().split('T')[0];
+  
+  document.getElementById('ghUser').value = localStorage.getItem('gh_user') || '';
+  document.getElementById('ghRepo').value = localStorage.getItem('gh_repo') || '';
+  document.getElementById('ghToken').value = localStorage.getItem('gh_token') || '';
+
+  if (localStorage.getItem('gh_token')) {
+    fetchFromGithub();
+  }
+
+  function saveGithubSettings() {
+    const u = document.getElementById('ghUser').value.trim();
+    const r = document.getElementById('ghRepo').value.trim();
+    const t = document.getElementById('ghToken').value.trim();
+
+    localStorage.setItem('gh_user', u);
+    localStorage.setItem('gh_repo', r);
+    localStorage.setItem('gh_token', t);
+
+    fetchFromGithub();
+  }
+
+  // GitHubからdata.jsonを取得
+  async function fetchFromGithub() {
+    const u = localStorage.getItem('gh_user');
+    const r = localStorage.getItem('gh_repo');
+    const t = localStorage.getItem('gh_token');
+
+    if (!u || !r || !t) return;
+
+    document.getElementById('syncStatus').textContent = 'GitHubから最新データを読み込み中...';
+
+    try {
+      const res = await fetch(`https://api.github.com/repos/${u}/${r}/contents/data.json`, {
+        headers: { 'Authorization': `token ${t}` }
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        fileSha = data.sha;
+        const content = JSON.parse(decodeURIComponent(escape(atob(data.content))));
+        
+        subjects = content.subjects || subjects;
+        books = content.books || books;
+
+        document.getElementById('syncStatus').textContent = '✅ GitHubデータ同期完了（最新データ）';
+        renderLocalOnly();
+      } else if (res.status === 404) {
+        // data.jsonがない場合は初回作成
+        await syncToGithub();
+        document.getElementById('syncStatus').textContent = '✅ 初回GitHubデータを生成しました';
+      }
+    } catch (e) {
+      document.getElementById('syncStatus').textContent = '❌ 同期エラー: 設定を確認してください';
+    }
+  }
+
+  // GitHubへdata.jsonを書き込み
+  async function syncToGithub() {
+    localStorage.setItem('custom_subjects', JSON.stringify(subjects));
+    localStorage.setItem('route_books_data', JSON.stringify(books));
+
+    const u = localStorage.getItem('gh_user');
+    const r = localStorage.getItem('gh_repo');
+    const t = localStorage.getItem('gh_token');
+
+    if (!u || !r || !t) return;
+
+    document.getElementById('syncStatus').textContent = 'GitHubへ同期保存中...';
+
+    const payloadData = {
+      subjects: subjects,
+      books: books,
+      updatedAt: new Date().toISOString()
+    };
+
+    const contentEncoded = btoa(unescape(encodeURIComponent(JSON.stringify(payloadData, null, 2))));
+
+    const body = {
+      message: 'Update study data via Dashboard',
+      content: contentEncoded
+    };
+    if (fileSha) body.sha = fileSha;
+
+    try {
+      const res = await fetch(`https://api.github.com/repos/${u}/${r}/contents/data.json`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `token ${t}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
+      });
+
+      if (res.ok) {
+        const resData = await res.json();
+        fileSha = resData.content.sha;
+        document.getElementById('syncStatus').textContent = '✅ GitHubへ正常に同期保存されました！';
+      }
+    } catch (e) {
+      document.getElementById('syncStatus').textContent = '❌ 保存エラーが発生しました';
+    }
+  }
+
+  function addSubject() {
+    const name = document.getElementById('newSubjectName').value.trim();
+    if (name && !subjects.includes(name)) {
+      subjects.push(name);
+      document.getElementById('newSubjectName').value = '';
+      render();
+    }
+  }
+
+  function removeSubject(subName) {
+    if (confirm(`科目「${subName}」を削除しますか？`)) {
+      subjects = subjects.filter(s => s !== subName);
+      render();
+    }
+  }
+
+  function addBook() {
+    const title = document.getElementById('inTitle').value.trim();
+    const subject = document.getElementById('inSubject').value;
+    const total = parseInt(document.getElementById('inTotal').value);
+    const startDate = document.getElementById('inStart').value;
+    const endDate = document.getElementById('inEnd').value;
+
+    if (!title || !total || !startDate || !endDate || !subject) {
+      alert("すべての項目を正しく入力してください。");
+      return;
+    }
+
+    books.push({ id: Date.now(), title, subject, total, startDate, endDate, dailyLogs: [0, 0, 0, 0, 0, 0, 0] });
+    document.getElementById('inTitle').value = '';
+    document.getElementById('inTotal').value = '';
+    render();
+  }
+
+  function render() {
+    renderLocalOnly();
+    syncToGithub();
+  }
+
+  function renderLocalOnly() {
+    renderSubjectUI();
+    renderTimeline();
+    renderSummary();
+    renderBooks();
+  }
+
+  function renderSubjectUI() {
+    const tagContainer = document.getElementById('subjectTagList');
+    tagContainer.innerHTML = '';
+    const select = document.getElementById('inSubject');
+    select.innerHTML = '';
+
+    subjects.forEach(sub => {
+      const color = getSubjectColor(sub);
+      tagContainer.innerHTML += `<div class="subject-tag" style="background-color: ${color};"><span>${escapeHtml(sub)}</span><button onclick="removeSubject('${escapeHtml(sub)}')">×</button></div>`;
+      select.innerHTML += `<option value="${escapeHtml(sub)}">${escapeHtml(sub)}</option>`;
+    });
+  }
+
+  function renderTimeline() {
+    const container = document.getElementById('timelineList');
+    container.innerHTML = '';
+    const timelineStart = new Date(2026, 0, 1);
+    const timelineEnd = new Date(2027, 11, 31);
+    const totalDays = (timelineEnd - timelineStart) / (1000 * 60 * 60 * 24);
+
+    const currentToday = new Date();
+    currentToday.setHours(0, 0, 0, 0);
+    const todayOffsetDays = (currentToday - timelineStart) / (1000 * 60 * 60 * 24);
+    const todayPercent = (todayOffsetDays / totalDays) * 100;
+
+    const oldMarker = document.getElementById('todayMarker'); if (oldMarker) oldMarker.remove();
+    const oldLabel = document.getElementById('todayLabel'); if (oldLabel) oldLabel.remove();
+
+    if (todayPercent >= 0 && todayPercent <= 100) {
+      const inner = document.getElementById('timelineInner');
+      const leftStyle = `calc(80px + (100% - 80px) * ${todayPercent / 100})`;
+      const marker = document.createElement('div'); marker.id = 'todayMarker'; marker.className = 'today-marker'; marker.style.left = leftStyle;
+      const label = document.createElement('div'); label.id = 'todayLabel'; label.className = 'today-label'; label.style.left = leftStyle;
+      label.textContent = `今日 (${currentToday.getMonth() + 1}/${currentToday.getDate()} ${dayNames[(currentToday.getDay() + 6) % 7]})`;
+      inner.appendChild(marker); inner.appendChild(label);
+    }
+
+    subjects.forEach(sub => {
+      const subBooks = books.filter(b => b.subject === sub);
+      let barsHtml = '';
+      const color = getSubjectColor(sub);
+
+      subBooks.forEach(b => {
+        const s = new Date(b.startDate);
+        const e = new Date(b.endDate);
+        const leftPercent = Math.max(0, Math.min(100, ((s - timelineStart) / (1000 * 60 * 60 * 24) / totalDays) * 100));
+        const widthPercent = Math.max(1.5, Math.min(100 - leftPercent, ((e - s) / (1000 * 60 * 60 * 24) / totalDays) * 100));
+        barsHtml += `<div class="timeline-bar" style="left: ${leftPercent}%; width: ${widthPercent}%; background-color: ${color};">${escapeHtml(b.title)}</div>`;
+      });
+      container.innerHTML += `<div class="subject-row"><div class="subject-name">${escapeHtml(sub)}</div><div class="timeline-track">${barsHtml}</div></div>`;
+    });
+  }
+
+  function renderSummary() {
+    const summaryDiv = document.getElementById('taskSummary');
+    summaryDiv.innerHTML = '';
+    if (books.length === 0) { summaryDiv.innerHTML = '<div style="font-size:0.8rem; color:#888;">タスクはありません。</div>'; return; }
+
+    books.forEach(b => {
+      const remainingDays = getRemainingDays(b.endDate);
+      const doneSum = b.dailyLogs.reduce((acc, v) => acc + (parseInt(v) || 0), 0);
+      const dailyNorma = Math.ceil(Math.max(0, b.total - doneSum) / remainingDays);
+      const color = getSubjectColor(b.subject);
+      summaryDiv.innerHTML += `<div class="task-summary-item"><div><span class="task-badge" style="background-color: ${color};">${escapeHtml(b.subject)}</span><strong>${escapeHtml(b.title)}</strong></div><div>今週目標: <strong>${dailyNorma * 7}</strong> 問 (日 / ${dailyNorma}問)</div></div>`;
+    });
+  }
+
+  function renderBooks() {
+    const listDiv = document.getElementById('bookList');
+    listDiv.innerHTML = '';
+    const curr = new Date();
+    const currentDayIdx = (curr.getDay() + 6) % 7;
+    const monday = new Date(curr);
+    monday.setDate(curr.getDate() - currentDayIdx);
+
+    books.forEach((b, index) => {
+      const doneSum = b.dailyLogs.reduce((acc, v) => acc + (parseInt(v) || 0), 0);
+      const percent = Math.min(100, Math.round((doneSum / b.total) * 100));
+      const remainingDays = getRemainingDays(b.endDate);
+      const dailyNorma = Math.ceil(Math.max(0, b.total - doneSum) / remainingDays);
+      const color = getSubjectColor(b.subject);
+
+      let daysHtml = '';
+      dayNames.forEach((day, dayIdx) => {
+        const val = b.dailyLogs[dayIdx] === 0 ? '' : b.dailyLogs[dayIdx];
+        const targetDate = new Date(monday);
+        targetDate.setDate(monday.getDate() + dayIdx);
+        const isToday = dayIdx === currentDayIdx;
+        daysHtml += `
+          <div class="day-col">
+            <div class="day-col-header ${isToday ? 'is-today' : ''}">${targetDate.getMonth() + 1}/${targetDate.getDate()} (${day})${isToday ? '<span class="today-tag">今日</span>' : ''}</div>
+            <input type="number" class="${isToday ? 'today-input' : ''}" value="${val}" placeholder="0" onchange="updateDailyLog(${index}, ${dayIdx}, this.value)">
+          </div>`;
+      });
+
+      listDiv.innerHTML += `
+        <div class="card" style="border-top: 4px solid ${color};">
+          <div class="card-header"><div><div class="book-title">${escapeHtml(b.title)} (<span style="color:${color};">${escapeHtml(b.subject)}</span>)</div><div class="book-info">終了目標: ${b.endDate} (残り ${remainingDays} 日)</div></div><button class="btn-del" onclick="deleteBook(${index})">削除</button></div>
+          <div class="norma-box"><span class="norma-title">今日やるべき目標</span><span class="norma-val">${dailyNorma} <span style="font-size:0.75rem; font-weight:normal;">問 / 日</span></span></div>
+          <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:#666; margin-bottom:4px;"><span>累計消化数: ${doneSum} / ${b.total} 問</span><span>${percent}%</span></div>
+          <div class="progress-bar"><div class="progress-fill" style="width: ${percent}%; background-color: ${color};"></div></div>
+          <div class="days-grid">${daysHtml}</div>
+        </div>`;
+    });
+  }
+
+  function getRemainingDays(endDateStr) {
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const end = new Date(endDateStr); end.setHours(0, 0, 0, 0);
+    return Math.max(1, Math.ceil((end - today) / (1000 * 60 * 60 * 24)));
+  }
+
+  function updateDailyLog(bIdx, dayIdx, val) {
+    const num = parseInt(val);
+    books[bIdx].dailyLogs[dayIdx] = isNaN(num) ? 0 : Math.max(0, num);
+    render();
+  }
+
+  function deleteBook(index) {
+    if (confirm("削除しますか？")) {
+      books.splice(index, 1);
+      render();
+    }
+  }
+
+  function escapeHtml(str) {
+    return str.replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' })[m]);
+  }
+
+  renderLocalOnly();
+</script>
