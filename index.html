@@ -8,7 +8,7 @@
     max-width: 900px;
     margin: 0 auto;
   }
-  h1 { font-size: 1.2rem; font-weight: 700; margin-bottom: 16px; }
+  h1 { font-size: 1.2rem; font-weight: 700; margin-bottom: 8px; }
   h2 { font-size: 1rem; font-weight: 600; margin-bottom: 12px; color: #333; }
 
   .section {
@@ -19,19 +19,18 @@
     margin-bottom: 20px;
   }
 
-  /* GitHub同期設定エリア */
-  .gh-config-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    margin-bottom: 8px;
-  }
-  .gh-config-grid.full { grid-template-columns: 1fr; }
-  .sync-status {
+  /* 同期ステータス */
+  .sync-status-bar {
     font-size: 0.75rem;
     font-weight: 600;
     color: #007aff;
-    margin-top: 6px;
+    margin-bottom: 16px;
+    background: #eef6ff;
+    padding: 8px 12px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
   }
 
   /* 科目管理エリア */
@@ -90,27 +89,10 @@
 
 <h1>学習ルート・進捗ダッシュボード</h1>
 
-<!-- GitHub端末同期設定 -->
-<div class="section">
-  <h2>複数端末のGitHub同期設定</h2>
-  <div class="gh-config-grid">
-    <div>
-      <label>GitHub ユーザー名</label>
-      <input type="text" id="ghUser" placeholder="例: username">
-    </div>
-    <div>
-      <label>リポジトリ名</label>
-      <input type="text" id="ghRepo" placeholder="例: study-tracker">
-    </div>
-  </div>
-  <div class="gh-config-grid full">
-    <div>
-      <label>GitHub Personal Access Token (PAT)</label>
-      <input type="password" id="ghToken" placeholder="ghp_xxxxxxxxxxxx">
-    </div>
-  </div>
-  <button class="btn-add" onclick="saveGithubSettings()">同期設定を保存して接続</button>
-  <div class="sync-status" id="syncStatus">未接続（設定を入力すると複数端末で完全同期されます）</div>
+<!-- 自動同期ステータス表示バー -->
+<div class="sync-status-bar">
+  <span id="syncStatus">🔄 クラウドデータを読み込み中...</span>
+  <button class="btn-sub-add" style="padding: 2px 8px; font-size: 0.7rem;" onclick="fetchFromGithub()">再読み込み</button>
 </div>
 
 <!-- 科目管理 -->
@@ -192,9 +174,14 @@
 </div>
 
 <script>
+  // ★★★ ここにご自身の GitHub 情報を設定してください ★★★
+  const GH_USER = 'YOUR_GITHUB_USERNAME'; // 例: 'fujita'
+  const GH_REPO = 'study-tracker';       // 例: 'study-tracker'
+  const GH_TOKEN = 'ghp_xxxxxxxxxxxx';   // 発行した Personal Access Token (PAT)
+
   let subjects = JSON.parse(localStorage.getItem('custom_subjects')) || ['英語', '数学', '国語', '理科', '社会'];
   let books = JSON.parse(localStorage.getItem('route_books_data')) || [];
-  let fileSha = ''; // GitHub API用
+  let fileSha = ''; 
   const dayNames = ['月', '火', '水', '木', '金', '土', '日'];
 
   const defaultColors = { '英語': '#2b5c8f', '数学': '#d9383a', '国語': '#d97724', '理科': '#2a8251', '社会': '#6b4c9a' };
@@ -207,43 +194,25 @@
     return fallbackPalette[Math.abs(hash) % fallbackPalette.length];
   }
 
-  // 初期化設定読み込み
+  // 初期化
   document.getElementById('inStart').value = new Date().toISOString().split('T')[0];
   document.getElementById('inEnd').value = new Date(2027, 11, 31).toISOString().split('T')[0];
-  
-  document.getElementById('ghUser').value = localStorage.getItem('gh_user') || '';
-  document.getElementById('ghRepo').value = localStorage.getItem('gh_repo') || '';
-  document.getElementById('ghToken').value = localStorage.getItem('gh_token') || '';
 
-  if (localStorage.getItem('gh_token')) {
-    fetchFromGithub();
-  }
-
-  function saveGithubSettings() {
-    const u = document.getElementById('ghUser').value.trim();
-    const r = document.getElementById('ghRepo').value.trim();
-    const t = document.getElementById('ghToken').value.trim();
-
-    localStorage.setItem('gh_user', u);
-    localStorage.setItem('gh_repo', r);
-    localStorage.setItem('gh_token', t);
-
-    fetchFromGithub();
-  }
+  // 起動時に自動で取得開始
+  fetchFromGithub();
 
   // GitHubからdata.jsonを取得
   async function fetchFromGithub() {
-    const u = localStorage.getItem('gh_user');
-    const r = localStorage.getItem('gh_repo');
-    const t = localStorage.getItem('gh_token');
+    if (!GH_USER || !GH_REPO || !GH_TOKEN || GH_USER === 'YOUR_GITHUB_USERNAME') {
+      document.getElementById('syncStatus').textContent = '⚠️ コード内のGitHub設定を書き換えてください';
+      return;
+    }
 
-    if (!u || !r || !t) return;
-
-    document.getElementById('syncStatus').textContent = 'GitHubから最新データを読み込み中...';
+    document.getElementById('syncStatus').textContent = '🔄 クラウドから最新データを読み込み中...';
 
     try {
-      const res = await fetch(`https://api.github.com/repos/${u}/${r}/contents/data.json`, {
-        headers: { 'Authorization': `token ${t}` }
+      const res = await fetch(`https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/data.json`, {
+        headers: { 'Authorization': `token ${GH_TOKEN}` }
       });
 
       if (res.ok) {
@@ -254,15 +223,15 @@
         subjects = content.subjects || subjects;
         books = content.books || books;
 
-        document.getElementById('syncStatus').textContent = '✅ GitHubデータ同期完了（最新データ）';
+        document.getElementById('syncStatus').textContent = '✅ クラウド同期完了（最新）';
         renderLocalOnly();
       } else if (res.status === 404) {
         // data.jsonがない場合は初回作成
         await syncToGithub();
-        document.getElementById('syncStatus').textContent = '✅ 初回GitHubデータを生成しました';
+        document.getElementById('syncStatus').textContent = '✅ 初回クラウドデータを生成しました';
       }
     } catch (e) {
-      document.getElementById('syncStatus').textContent = '❌ 同期エラー: 設定を確認してください';
+      document.getElementById('syncStatus').textContent = '❌ 同期エラーが発生しました';
     }
   }
 
@@ -271,13 +240,9 @@
     localStorage.setItem('custom_subjects', JSON.stringify(subjects));
     localStorage.setItem('route_books_data', JSON.stringify(books));
 
-    const u = localStorage.getItem('gh_user');
-    const r = localStorage.getItem('gh_repo');
-    const t = localStorage.getItem('gh_token');
+    if (!GH_USER || !GH_REPO || !GH_TOKEN || GH_USER === 'YOUR_GITHUB_USERNAME') return;
 
-    if (!u || !r || !t) return;
-
-    document.getElementById('syncStatus').textContent = 'GitHubへ同期保存中...';
+    document.getElementById('syncStatus').textContent = '☁️ クラウドへ自動保存中...';
 
     const payloadData = {
       subjects: subjects,
@@ -294,10 +259,10 @@
     if (fileSha) body.sha = fileSha;
 
     try {
-      const res = await fetch(`https://api.github.com/repos/${u}/${r}/contents/data.json`, {
+      const res = await fetch(`https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/data.json`, {
         method: 'PUT',
         headers: {
-          'Authorization': `token ${t}`,
+          'Authorization': `token ${GH_TOKEN}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(body)
@@ -306,10 +271,10 @@
       if (res.ok) {
         const resData = await res.json();
         fileSha = resData.content.sha;
-        document.getElementById('syncStatus').textContent = '✅ GitHubへ正常に同期保存されました！';
+        document.getElementById('syncStatus').textContent = '✅ クラウドへ保存されました';
       }
     } catch (e) {
-      document.getElementById('syncStatus').textContent = '❌ 保存エラーが発生しました';
+      document.getElementById('syncStatus').textContent = '❌ クラウド保存エラー';
     }
   }
 
