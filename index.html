@@ -1,98 +1,122 @@
-<style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
-    background-color: #f7f7f8;
-    color: #111111;
-    padding: 16px;
-    max-width: 900px;
-    margin: 0 auto;
-  }
-  h1 { font-size: 1.2rem; font-weight: 700; margin-bottom: 8px; }
-  h2 { font-size: 1rem; font-weight: 600; margin-bottom: 12px; color: #333; }
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>aww6SW4LN5U7F97yzEeVZZf0XYPTXg2aQYQO</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+      background-color: #f7f7f8;
+      color: #111111;
+      padding: 16px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    h1 { font-size: 1.2rem; font-weight: 700; margin-bottom: 8px; }
+    h2 { font-size: 1rem; font-weight: 600; margin-bottom: 12px; color: #333; }
 
-  .section {
-    background: #ffffff;
-    border: 1px solid #e5e5ea;
-    border-radius: 12px;
-    padding: 16px;
-    margin-bottom: 20px;
-  }
+    .section {
+      background: #ffffff;
+      border: 1px solid #e5e5ea;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 20px;
+    }
 
-  /* 同期ステータス */
-  .sync-status-bar {
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: #007aff;
-    margin-bottom: 16px;
-    background: #eef6ff;
-    padding: 8px 12px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
+    /* クラウド同期ステータスバー */
+    .sync-status-bar {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #007aff;
+      background: #eef6ff;
+      padding: 10px 12px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .sync-status-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .token-setting-box {
+      display: flex;
+      gap: 6px;
+      width: 100%;
+    }
 
-  /* 科目管理エリア */
-  .subject-manage-row { display: flex; gap: 8px; margin-bottom: 12px; }
-  .subject-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-  .subject-tag {
-    font-size: 0.75rem; padding: 4px 8px; border-radius: 6px;
-    display: flex; align-items: center; gap: 6px; color: #ffffff; font-weight: 600;
-  }
-  .subject-tag button { background: none; border: none; color: #ffffff; font-size: 0.85rem; cursor: pointer; opacity: 0.8; }
+    /* 科目管理エリア */
+    .subject-manage-row { display: flex; gap: 8px; margin-bottom: 12px; }
+    .subject-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .subject-tag {
+      font-size: 0.75rem; padding: 4px 8px; border-radius: 6px;
+      display: flex; align-items: center; gap: 6px; color: #ffffff; font-weight: 600;
+    }
+    .subject-tag button { background: none; border: none; color: #ffffff; font-size: 0.85rem; cursor: pointer; opacity: 0.8; }
 
-  /* タイムライン */
-  .timeline-wrapper { overflow-x: auto; border: 1px solid #e5e5ea; border-radius: 8px; background: #ffffff; padding: 12px; }
-  .timeline-inner { min-width: 1800px; position: relative; }
-  .year-header { display: flex; margin-left: 80px; border-bottom: 2px solid #333; font-weight: bold; font-size: 0.85rem; color: #111; }
-  .year-cell { flex: 1; text-align: center; padding: 4px 0; background: #fafafa; }
-  .year-cell:first-child { border-right: 2px solid #e5e5ea; }
-  .month-header { display: flex; margin-left: 80px; border-bottom: 1px solid #d1d1d6; padding-bottom: 4px; margin-bottom: 8px; background: #ffffff; }
-  .month-cell { flex: 1; text-align: center; font-size: 0.75rem; font-weight: 600; color: #555; border-left: 1px solid #e5e5ea; padding: 2px 0; }
-  .month-cell:first-child { border-left: none; }
-  .subject-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
-  .subject-name { width: 68px; font-size: 0.85rem; font-weight: 700; color: #333; flex-shrink: 0; text-align: right; }
-  .timeline-track { flex: 1; height: 32px; background: #f7f7f8; border-radius: 6px; position: relative; border: 1px solid #e5e5ea; background-image: linear-gradient(to right, #e5e5ea 1px, transparent 1px); background-size: calc(100% / 24) 100%; }
-  .timeline-bar { position: absolute; top: 4px; height: 22px; color: #ffffff; font-size: 0.75rem; font-weight: 600; line-height: 22px; padding: 0 10px; border-radius: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-shadow: 0 1px 3px rgba(0,0,0,0.15); z-index: 1; }
-  .today-marker { position: absolute; top: 28px; bottom: 0; width: 2px; background-color: #ff3b30; z-index: 5; pointer-events: none; }
-  .today-label { position: absolute; top: 2px; transform: translateX(-50%); background-color: #ff3b30; color: #ffffff; font-size: 0.65rem; font-weight: bold; padding: 2px 6px; border-radius: 10px; white-space: nowrap; z-index: 6; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+    /* タイムライン */
+    .timeline-wrapper { overflow-x: auto; border: 1px solid #e5e5ea; border-radius: 8px; background: #ffffff; padding: 12px; }
+    .timeline-inner { min-width: 1800px; position: relative; }
+    .year-header { display: flex; margin-left: 80px; border-bottom: 2px solid #333; font-weight: bold; font-size: 0.85rem; color: #111; }
+    .year-cell { flex: 1; text-align: center; padding: 4px 0; background: #fafafa; }
+    .year-cell:first-child { border-right: 2px solid #e5e5ea; }
+    .month-header { display: flex; margin-left: 80px; border-bottom: 1px solid #d1d1d6; padding-bottom: 4px; margin-bottom: 8px; background: #ffffff; }
+    .month-cell { flex: 1; text-align: center; font-size: 0.75rem; font-weight: 600; color: #555; border-left: 1px solid #e5e5ea; padding: 2px 0; }
+    .month-cell:first-child { border-left: none; }
+    .subject-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .subject-name { width: 68px; font-size: 0.85rem; font-weight: 700; color: #333; flex-shrink: 0; text-align: right; }
+    .timeline-track { flex: 1; height: 32px; background: #f7f7f8; border-radius: 6px; position: relative; border: 1px solid #e5e5ea; background-image: linear-gradient(to right, #e5e5ea 1px, transparent 1px); background-size: calc(100% / 24) 100%; }
+    .timeline-bar { position: absolute; top: 4px; height: 22px; color: #ffffff; font-size: 0.75rem; font-weight: 600; line-height: 22px; padding: 0 10px; border-radius: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-shadow: 0 1px 3px rgba(0,0,0,0.15); z-index: 1; }
+    .today-marker { position: absolute; top: 28px; bottom: 0; width: 2px; background-color: #ff3b30; z-index: 5; pointer-events: none; }
+    .today-label { position: absolute; top: 2px; transform: translateX(-50%); background-color: #ff3b30; color: #ffffff; font-size: 0.65rem; font-weight: bold; padding: 2px 6px; border-radius: 10px; white-space: nowrap; z-index: 6; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
 
-  /* フォーム・カード */
-  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
-  .form-grid.full { grid-template-columns: 1fr; }
-  label { font-size: 0.7rem; color: #666; display: block; margin-bottom: 2px; }
-  input, select { width: 100%; font-size: 0.85rem; border: 1px solid #e5e5ea; border-radius: 6px; padding: 6px 8px; outline: none; background: #fafafa; }
-  .btn-add { width: 100%; background: #111111; color: #ffffff; border: none; border-radius: 6px; padding: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; margin-top: 4px; }
-  .btn-sub-add { background: #333; color: #fff; border: none; border-radius: 6px; padding: 6px 12px; font-size: 0.8rem; cursor: pointer; white-space: nowrap; }
-  .task-summary-list { display: flex; flex-direction: column; gap: 8px; }
-  .task-summary-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: #fafafa; border-radius: 8px; font-size: 0.85rem; }
-  .task-badge { font-size: 0.7rem; padding: 2px 8px; border-radius: 4px; margin-right: 6px; color: #ffffff; font-weight: 600; }
-  .card { background: #ffffff; border: 1px solid #e5e5ea; border-radius: 12px; padding: 16px; margin-bottom: 12px; }
-  .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
-  .book-title { font-size: 0.95rem; font-weight: 700; }
-  .book-info { font-size: 0.75rem; color: #666; margin-top: 2px; }
-  .btn-del { background: none; border: none; color: #999; font-size: 0.75rem; cursor: pointer; }
-  .norma-box { display: flex; justify-content: space-between; align-items: baseline; background: #f7f7f8; padding: 8px 12px; border-radius: 8px; margin: 10px 0; }
-  .norma-title { font-size: 0.75rem; color: #555; }
-  .norma-val { font-size: 1rem; font-weight: 700; }
-  .progress-bar { height: 6px; background: #e5e5ea; border-radius: 3px; overflow: hidden; margin-bottom: 12px; }
-  .progress-fill { height: 100%; background: #111111; transition: width 0.3s; }
-  .days-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; padding-top: 8px; border-top: 1px solid #f0f0f2; }
-  .day-col { display: flex; flex-direction: column; align-items: center; }
-  .day-col-header { font-size: 0.65rem; color: #666; margin-bottom: 4px; text-align: center; line-height: 1.2; }
-  .day-col-header.is-today { color: #ff3b30; font-weight: bold; }
-  .today-tag { background: #ff3b30; color: #fff; font-size: 0.55rem; padding: 1px 3px; border-radius: 3px; display: block; margin-top: 1px; }
-  .day-col input { text-align: center; padding: 4px 0; font-size: 0.8rem; }
-  .day-col input.today-input { border: 1.5px solid #ff3b30; background-color: #fff5f5; }
-</style>
+    /* フォーム・カード */
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+    .form-grid.full { grid-template-columns: 1fr; }
+    label { font-size: 0.7rem; color: #666; display: block; margin-bottom: 2px; }
+    input, select { width: 100%; font-size: 0.85rem; border: 1px solid #e5e5ea; border-radius: 6px; padding: 6px 8px; outline: none; background: #fafafa; }
+    .btn-add { width: 100%; background: #111111; color: #ffffff; border: none; border-radius: 6px; padding: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; margin-top: 4px; }
+    .btn-sub-add { background: #333; color: #fff; border: none; border-radius: 6px; padding: 6px 12px; font-size: 0.8rem; cursor: pointer; white-space: nowrap; }
+    .task-summary-list { display: flex; flex-direction: column; gap: 8px; }
+    .task-summary-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: #fafafa; border-radius: 8px; font-size: 0.85rem; }
+    .task-badge { font-size: 0.7rem; padding: 2px 8px; border-radius: 4px; margin-right: 6px; color: #ffffff; font-weight: 600; }
+    .card { background: #ffffff; border: 1px solid #e5e5ea; border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+    .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+    .book-title { font-size: 0.95rem; font-weight: 700; }
+    .book-info { font-size: 0.75rem; color: #666; margin-top: 2px; }
+    .btn-del { background: none; border: none; color: #999; font-size: 0.75rem; cursor: pointer; }
+    .norma-box { display: flex; justify-content: space-between; align-items: baseline; background: #f7f7f8; padding: 8px 12px; border-radius: 8px; margin: 10px 0; }
+    .norma-title { font-size: 0.75rem; color: #555; }
+    .norma-val { font-size: 1rem; font-weight: 700; }
+    .progress-bar { height: 6px; background: #e5e5ea; border-radius: 3px; overflow: hidden; margin-bottom: 12px; }
+    .progress-fill { height: 100%; background: #111111; transition: width 0.3s; }
+    .days-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; padding-top: 8px; border-top: 1px solid #f0f0f2; }
+    .day-col { display: flex; flex-direction: column; align-items: center; }
+    .day-col-header { font-size: 0.65rem; color: #666; margin-bottom: 4px; text-align: center; line-height: 1.2; }
+    .day-col-header.is-today { color: #ff3b30; font-weight: bold; }
+    .today-tag { background: #ff3b30; color: #fff; font-size: 0.55rem; padding: 1px 3px; border-radius: 3px; display: block; margin-top: 1px; }
+    .day-col input { text-align: center; padding: 4px 0; font-size: 0.8rem; }
+    .day-col input.today-input { border: 1.5px solid #ff3b30; background-color: #fff5f5; }
+  </style>
+</head>
+<body>
 
 <h1>学習ルート・進捗ダッシュボード</h1>
 
 <!-- 自動同期ステータス表示バー -->
 <div class="sync-status-bar">
-  <span id="syncStatus">🔄 GitHubからデータ取得中...</span>
-  <button class="btn-sub-add" style="padding: 2px 8px; font-size: 0.7rem;" onclick="fetchFromGithub()">更新</button>
+  <div class="sync-status-header">
+    <span id="syncStatus">🔑 アクセストークン（ghp_...）を設定してください</span>
+    <button class="btn-sub-add" style="padding: 2px 8px; font-size: 0.7rem;" onclick="fetchFromGithub()">再読み込み</button>
+  </div>
+  <div class="token-setting-box" id="tokenBox">
+    <input type="password" id="inputToken" placeholder="ghp_ から始まるトークンを貼り付け">
+    <button class="btn-sub-add" onclick="saveToken()">保存</button>
+  </div>
 </div>
 
 <!-- 科目管理 -->
@@ -174,11 +198,10 @@
 </div>
 
 <script>
-  // ★★★ ここにご自身の GitHub 情報を設定してください ★★★
   const GH_USER = 'bca139784'; // 例: 'fujita'
   const GH_REPO = 'study-tracker';       // リポジトリ名
-  const GH_TOKEN = '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';   // トークン (PAT)
 
+  let GH_TOKEN = localStorage.getItem('gh_sync_token') || '';
   let subjects = JSON.parse(localStorage.getItem('custom_subjects')) || ['英語', '数学', '国語', '理科', '社会'];
   let books = JSON.parse(localStorage.getItem('route_books_data')) || [];
   let fileSha = ''; 
@@ -194,14 +217,12 @@
     return fallbackPalette[Math.abs(hash) % fallbackPalette.length];
   }
 
-  // 日本語（UTF-8）の文字列をBase64デコードする関数
   function b64DecodeUnicode(str) {
     return decodeURIComponent(Array.prototype.map.call(atob(str), function(c) {
       return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
     }).join(''));
   }
 
-  // 日本語（UTF-8）の文字列をBase64エンコードする関数
   function b64EncodeUnicode(str) {
     return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, function(match, p1) {
       return String.fromCharCode('0x' + p1);
@@ -212,15 +233,29 @@
   document.getElementById('inStart').value = new Date().toISOString().split('T')[0];
   document.getElementById('inEnd').value = new Date(2027, 11, 31).toISOString().split('T')[0];
 
-  // 起動時に自動取得
-  fetchFromGithub();
+  if (GH_TOKEN) {
+    document.getElementById('tokenBox').style.display = 'none';
+    fetchFromGithub();
+  } else {
+    renderLocalOnly();
+  }
 
-  // GitHubからdata.jsonを取得
+  function saveToken() {
+    const t = document.getElementById('inputToken').value.trim();
+    if (t) {
+      GH_TOKEN = t;
+      localStorage.setItem('gh_sync_token', t);
+      document.getElementById('tokenBox').style.display = 'none';
+      fetchFromGithub();
+    }
+  }
+
   async function fetchFromGithub() {
     const statusEl = document.getElementById('syncStatus');
 
-    if (!GH_USER || !GH_REPO || !GH_TOKEN || GH_USER === 'YOUR_GITHUB_USERNAME') {
-      statusEl.textContent = '⚠️ コード内のGitHub設定を入力してください';
+    if (!GH_TOKEN) {
+      statusEl.textContent = '🔑 トークン（ghp_...）を入力してください';
+      document.getElementById('tokenBox').style.display = 'flex';
       renderLocalOnly();
       return;
     }
@@ -239,7 +274,6 @@
         const data = await res.json();
         fileSha = data.sha;
         
-        // Base64デコード（改行を除去）
         const cleanContent = data.content.replace(/\n/g, '');
         const jsonText = b64DecodeUnicode(cleanContent);
         const parsed = JSON.parse(jsonText);
@@ -247,14 +281,14 @@
         subjects = parsed.subjects || subjects;
         books = parsed.books || books;
 
-        statusEl.textContent = '✅ クラウド同期完了（最新）';
+        statusEl.textContent = '✅ クラウド同期完了（全端末共通データ）';
         renderLocalOnly();
       } else if (res.status === 404) {
         statusEl.textContent = '📄 data.json が無いため初期データを送信します';
         await syncToGithub();
       } else {
-        const errJson = await res.json().catch(() => ({}));
-        statusEl.textContent = `❌ APIエラー (${res.status}): ${errJson.message || '認証失敗'}`;
+        statusEl.textContent = '❌ 認証エラー: 有効なトークンを再入力してください';
+        document.getElementById('tokenBox').style.display = 'flex';
         renderLocalOnly();
       }
     } catch (e) {
@@ -263,13 +297,12 @@
     }
   }
 
-  // GitHubへdata.jsonを書き込み
   async function syncToGithub() {
     localStorage.setItem('custom_subjects', JSON.stringify(subjects));
     localStorage.setItem('route_books_data', JSON.stringify(books));
 
     const statusEl = document.getElementById('syncStatus');
-    if (!GH_USER || !GH_REPO || !GH_TOKEN || GH_USER === 'YOUR_GITHUB_USERNAME') return;
+    if (!GH_TOKEN) return;
 
     statusEl.textContent = '☁️ クラウドへ自動保存中...';
 
@@ -301,7 +334,7 @@
       if (res.ok) {
         const resData = await res.json();
         fileSha = resData.content.sha;
-        statusEl.textContent = '✅ クラウドへ保存されました';
+        statusEl.textContent = '✅ クラウドへ保存されました（全端末に即時反映）';
       } else {
         statusEl.textContent = '❌ クラウド書き込み失敗';
       }
@@ -487,3 +520,5 @@
 
   renderLocalOnly();
 </script>
+</body>
+</html>
